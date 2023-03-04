@@ -10,7 +10,7 @@ The following dependencies are required to run the Friendly Robot Cat system:
     PyTorch
     NumPy
     PyAudio
-    SpeechRecognition
+    SpeechRecognition(internal defined library)
     gTTS (Google Text-to-Speech)
     playsound
 
