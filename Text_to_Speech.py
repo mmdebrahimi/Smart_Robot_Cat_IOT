@@ -2,6 +2,7 @@
 # import os
 # from io import BytesIO
 import playsound
+
 # import tempfile
 # from pydub import AudioSegment
 # from pydub.playback import play
@@ -16,7 +17,8 @@ import torch
 import pandas as pd
 # import whisper
 import torchaudio
-
+import pyaudio
+import wave
 from tqdm.notebook import tqdm
 import openai
 # !pip install ibm_watson
@@ -57,15 +59,36 @@ class TextToSpeech_Watson:
     # Setup Service
     def __init__(self, apikey=api_key_watson):
         openai.api_key = apikey
-    def generate_audio_watson(self, text, apikey = api_key_watson):
+    # def generate_audio_watson(self, text, apikey = api_key_watson):
         authenticator = IAMAuthenticator(apikey)
-        tts = TextToSpeechV1(authenticator=authenticator)
-        tts.set_service_url(url)
-
-        with open('./speech.mp3', 'wb') as audio_file:
-            res = tts.synthesize(text, accept='audio/mp3', voice='en-US_AllisonV3Voice').get_result()
+        self.tts = TextToSpeechV1(authenticator=authenticator)
+        self.tts.set_service_url(url)
+    #
+    #     with open('output.mp3', 'wb') as audio_file:
+    #         res = tts.synthesize(text, accept='audio/mp3', voice='en-US_AllisonV3Voice').get_result()
+    #         audio_file.write(res.content)
+    #     playsound.playsound('output.mp3')
+    def generate_audio_watson(self, text, apikey = api_key_watson):
+        with open('output.wav', 'wb') as audio_file:
+            res = self.tts.synthesize(text, accept='audio/wav', voice='en-US_AllisonV3Voice').get_result()
             audio_file.write(res.content)
-        playsound.playsound('./speech.mp3')
+        self.play_audio_file('output.wav')
+
+    def play_audio_file(self, file_path):
+        chunk = 1024
+        wf = wave.open(file_path, 'rb')
+        p = pyaudio.PyAudio()
+        stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
+                        channels=wf.getnchannels(),
+                        rate=wf.getframerate(),
+                        output=True)
+        data = wf.readframes(chunk)
+        while data:
+            stream.write(data)
+            data = wf.readframes(chunk)
+        stream.stop_stream()
+        stream.close()
+        p.terminate()
 
 # class TextToSpeech:
 #     import openai

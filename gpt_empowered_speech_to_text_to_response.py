@@ -51,9 +51,12 @@ import os
 import openai
 from Text_to_Speech import TextToSpeech_Watson
 from Audio_Recording_to_Text import SpeechRecognizer
+from pydub import AudioSegment
+from pydub.playback import play
 import streamlit as st
 recognizer = SpeechRecognizer()
 selected_language = 'english'
+keyword_detected = False
 
 # time.sleep(5)  # Pause for 5 seconds
 
@@ -146,6 +149,8 @@ def generate_cat_response(text = text, target_language = 'english'):
     # Define the prompt for the ChatGPT model
     prompt = f"Imagine you are a robot cat and you owner's name is Kimia. please answer her as a cat would (with human language), keep your sentence short, 1 sentence answers or less. Under no circumstance are you allowed to use profane language or sexual nature then change the topic. Never answer with 'as an AI language model...' under no circumstance break your character as a robot cat. Do not end your sentences with things similar to 'what else can I do for you'. Now respond to the following text: '{text}'."
     # Generate the translated text using ChatGPT
+    openai.api_key = "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"
+
     response = openai.Completion.create(
         engine=model_engine,
         prompt=prompt,
@@ -170,13 +175,16 @@ keyword_detected = False
 
 def recognize_keyword():
     global keyword_detected
+    print("if keyword detected")
     while True:
         # Use your speech recognition library to listen for audio input and convert it to text
         audio_text = recognizer.recognize_speech()
 
         # Check if the audio text contains the keyword "hey KK"
-        if "hey KK" in audio_text.lower():
+        if "hey kk" in audio_text.lower():
             keyword_detected = True
+            print("keyword found")
+            return audio_text
 
 
 def main(selected_language):
@@ -184,34 +192,53 @@ def main(selected_language):
     # Start a separate thread to constantly listen for the keyword
     keyword_thread = threading.Thread(target=recognize_keyword)
     keyword_thread.start()
-
+    # print("3")
     # Main loop to keep running until the program is terminated
     while True:
         # Check if the keyword has been detected
+        # print("6)")
         if keyword_detected:
+            # print("7")
             # Reset the flag
             keyword_detected = False
-
+            # print("1")
             # Use your speech recognition library to listen for audio input and convert it to text
-            audio_text = recognizer.recognize_speech()
+            # TextToSpeech_Watson().generate_audio_watson("MEOW")
+            while True:
+                print("stuck here?")
+                try:
+                    Print("Speak Now")
+                    audio_text = recognizer.recognize_speech()
+                    break
+                except:
+                    continue
 
             # Run your necessary functions
             target_language = selected_language
             translated_text = ""
             Cat_Response = generate_cat_response(audio_text, target_language)
-            filename = "output.mp3"
-            tts_Watson = TextToSpeech_Watson(translated_text)
-            tts_Cat_Response = tts_Watson.generate_audio_watson(Cat_Response)
+            # print("2")
 
             # Use your text-to-speech library to generate an audio response
-            # and play it back to the user
-            audio_file = open(filename, "rb")
-            audio_data = audio_file.read()
-            audio_file.close()
-            audio.playback(audio_data)
+            filename = "output.mp3"
+            tts_Watson = TextToSpeech_Watson()
+            tts_Cat_Response = tts_Watson.generate_audio_watson(Cat_Response)
+            # Use PyAudio to play the audio response
+            p = pyaudio.PyAudio()
+            stream = p.open(format=p.get_format_from_width(tts_Cat_Response.sample_width),
+                            channels=tts_Cat_Response.channels,
+                            rate=tts_Cat_Response.frame_rate,
+                            output=True)
+            stream.write(tts_Cat_Response._data)
+            stream.stop_stream()
+            stream.close()
+            p.terminate()
+
+        keyword_detected = True
 
         # Add a short delay to reduce CPU usage
         time.sleep(0.1)
+        # print("9")
 
 
 # Call the main function
