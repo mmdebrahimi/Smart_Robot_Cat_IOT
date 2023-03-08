@@ -1,25 +1,11 @@
-# from gtts import gTTS
-# import os
-# from io import BytesIO
-import playsound
-
-# import tempfile
-# from pydub import AudioSegment
-# from pydub.playback import play
-import requests
-import json
 try:
     import tensorflow  # required in Colab to avoid protobuf compatibility issues
 except ImportError:
     pass
 
 import torch
-import pandas as pd
-# import whisper
-import torchaudio
 import pyaudio
 import wave
-from tqdm.notebook import tqdm
 import openai
 # !pip install ibm_watson
 # !pip install ibm_cloud_sdk_core
