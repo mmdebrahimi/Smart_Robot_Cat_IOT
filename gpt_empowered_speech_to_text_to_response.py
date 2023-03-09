@@ -54,25 +54,13 @@ recognizer = SpeechRecognizer()
 selected_language = 'english'
 keyword_detected = False
 
-# time.sleep(5)  # Pause for 5 seconds
-
-# recognize speech using the object method and store the transcribed text
-
-
-# print(text[1])
-
-
-
 # Set up the OpenAI API client
 
 # Set the model engine and your OpenAI API key
 model_engine = "text-davinci-003"
-# assert "openai" in openai_secret_manager.get_services()
-# secrets = openai_secret_manager.get_secret("openai")
-# openai.api_key = secrets["api_key"]
-# openai.api_key = "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"
-# openai.api_key = "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"
-openai.api_key = "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"
+# Access your API key from the environment variable
+# api_key = os.environ['OPENAI_API_KEY']
+openai.api_key = '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'
 # import speech_recognition as sr
 from flask import Flask, request, jsonify
 
@@ -143,9 +131,9 @@ text = ""
 # Generate a response text from cat robot using input_text from SpeechRecognizer function
 def generate_cat_response(text = text, target_language = 'english'):
     # Define the prompt for the ChatGPT model
-    prompt = f"Imagine you are a robot cat and you owner's name is Kimia. please answer her as a cat would (with human language), keep your sentence short, 1 sentence answers or less. Under no circumstance are you allowed to use profane language or sexual nature then change the topic. Never answer with 'as an AI language model...' under no circumstance break your character as a robot cat. Do not end your sentences with things similar to 'what else can I do for you'. Now respond to the following text: '{text}'."
+    prompt = f"Imagine you are a robot cat and you owner's name is Kimia. please answer her as a cat would (with human language), keep your sentence short but you are allowed to tell imaginary stories. Under no circumstance are you allowed to use profane language or sexual nature then change the topic. Never answer with 'as an AI language model...' under no circumstance break your character as a robot cat. Do not end your sentences with things similar to 'what else can I do for you'. Now respond to the following text: '{text}'."
     # Generate the translated text using ChatGPT
-    openai.api_key = "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"
+    openai.api_key = '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'
 
     response = openai.Completion.create(
         engine=model_engine,
@@ -198,10 +186,12 @@ def main(selected_language):
     while True:
         # Check if the keyword has been detected
         # print("6)")
+        #TODO add random cat sounds function
         if keyword_detected:
             # Use your speech recognition library to listen for audio input and convert it to text
             # TextToSpeech_Watson().generate_audio_watson("MEOW")
-            TextToSpeech_Watson().play_audio_file(file_path=r"./sounds/cat-meow.wav")
+            # TextToSpeech_Watson().play_audio_file(file_path=r"./sounds/cat-meow.wav")
+            TextToSpeech_Watson().play_audio_file(file_path=r"./sounds/alice_cat_meow.wav")
 
             audio_text = recognizer.recognize_speech()
             # print("audio was translated to text by google")
