@@ -34,7 +34,8 @@ You can configure the Friendly Robot Cat system by modifying the config.py file.
 
 Credits
 
-This project is based on the work of the OpenAI team and their GPT models. The project was developed by E.Ebrahimi Et al. as part of a robotic automation.
+This project is based on the work of the OpenAI team and their GPT models. The project was developed by E.Ebrahimi Et al. as part of a robotic automation endeavor.
+
 License
 
 This project is licensed under the MIT License.
