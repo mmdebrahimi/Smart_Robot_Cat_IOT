@@ -41,37 +41,46 @@ Original file is located at
 # from google.cloud import speech
 #
 # Importing required packages
+# !pip install ibm_watson
 from collections import deque
-import os
 # os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "dym3y-xgihya-6691426537bf.json"
-
-import time
-from gtts import gTTS
+import pyaudio
+import os
+import openai
 from Text_to_Speech import TextToSpeech_Watson
 from Audio_Recording_to_Text import SpeechRecognizer
-import streamlit as st
-import openai
+import streamlit as sr
 recognizer = SpeechRecognizer()
 selected_language = 'english'
-
-# time.sleep(5)  # Pause for 5 seconds
-
-# recognize speech using the object method and store the transcribed text
-
-
-# print(text[1])
-
-
+keyword_detected = False
 
 # Set up the OpenAI API client
 
 # Set the model engine and your OpenAI API key
 model_engine = "text-davinci-003"
-# assert "openai" in openai_secret_manager.get_services()
-# secrets = openai_secret_manager.get_secret("openai")
-# openai.api_key = secrets["api_key"]
-# openai.api_key = "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"
-openai.api_key = "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"
+# Access your API key from the environment variable
+# api_key = os.environ['OPENAI_API_KEY']
+openai.api_key = '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'
+# import speech_recognition as sr
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+@app.route('/speech', methods=['POST'])
+def speech_recognition():
+    r = sr.Recognizer()
+    audio_file = request.files['audio_data']
+    with sr.AudioFile(audio_file) as source:
+        audio = r.record(source)
+        try:
+            text = r.recognize_google(audio)
+            if "hey KK" in text:
+                response = RecognizeText()
+                return jsonify(response)
+            else:
+                return "Keyword not detected"
+        except sr.UnknownValueError:
+            return "Unable to recognize speech"
 
 
 def check_and_install_libraries():
@@ -117,12 +126,15 @@ def check_and_install_libraries():
 #     translated_text = response.choices[0].text.strip()
 #
 #     return translated_text
-
+#initiate text
+text = ""
 # Generate a response text from cat robot using input_text from SpeechRecognizer function
 def generate_cat_response(text = text, target_language = 'english'):
     # Define the prompt for the ChatGPT model
-    prompt = f"Imagine you are a robot cat and you owner's name is Kimia. please answer her as a cat would (with human language), keep your sentence short, 1 sentence answers or less. Under no circumstance are you allowed to use profane language or sexual nature then change the topic. Never answer with 'as an AI language model...' under no circumstance break your character as a robot cat. Do not end your sentences with things similar to 'what else can I do for you'. Now respond to the following text: '{text}'."
+    prompt = f"Imagine you are a robot cat and you owner's name is Kimia. please answer her as a cat would (with human language), keep your sentence short but you are allowed to tell imaginary stories. Under no circumstance are you allowed to use profane language or sexual nature then change the topic. Never answer with 'as an AI language model...' under no circumstance break your character as a robot cat. Do not end your sentences with things similar to 'what else can I do for you'. Now respond to the following text: '{text}'."
     # Generate the translated text using ChatGPT
+    openai.api_key = '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'
+
     response = openai.Completion.create(
         engine=model_engine,
         prompt=prompt,
@@ -131,48 +143,78 @@ def generate_cat_response(text = text, target_language = 'english'):
         stop=None,
         temperature=0.7,
     )
-    print(response.choices[0].text.strip())
     # Extract the translated text from the response
     translated_cat_text = response.choices[0].text.strip()
+    print(translated_cat_text)
 
     return translated_cat_text
-# Define the main function that sets up the Streamlit UI and handles the translation process
 
-def main(selected_language, text = text):
-    text = recognizer.recognize_speech()
-    # Wait for the next prompt
-    # # Set up the Streamlit UI
-    text_input = text
 
-    # Create a selectbox for the user to select the target language
-    target_language = selected_language
+import time
+import threading
 
-    # # Create a button that the user can click to initiate the translation process
-    # translate_button = st.button('Translate')
+# Define a flag to indicate if the keyword has been detected
+keyword_detected = False
 
-    # Create a placeholder where the translated text will be displayed
-    translated_text = ""
 
-    # translated_text = translate_text(text_input, target_language)
-    Cat_Response = generate_cat_response(text_input, target_language)
+def recognize_keyword():
+    global keyword_detected
+    keyword_detected = False
 
-    filename = "output.mp3"
-    # tts = TextToSpeech()
-    # with open("example.txt", "r") as file:
-        # text = file.read()
-    # tts.convert(translated_text, filename)
-    tts_Watson = TextToSpeech_Watson(translated_text)
-    tts_Cat_Response = tts_Watson.generate_audio_watson(Cat_Response)
-    # tts_Watson = tts_Watson.generate_audio_watson(translated_text)
-    # tts_Whisper.generate_audio(translated_text) #use this for google text to speech - very robotic
-# import ipywidgets as widgets
-# from IPython.display import display
+    print("if keyword detected")
+    while True:
+        # Use your speech recognition library to listen for audio input and convert it to text
+        audio_text = recognizer.recognize_speech()
 
-# options = ['Arabic', 'Farsi', 'English', 'Spanish', 'French', 'German']
-# selected_language = widgets.Select(options=options)
+        # Check if the audio text contains the keyword "hey KK"
+        try:
+            if "hey kk" in audio_text.lower():
+                keyword_detected = True
+                print("keyword found")
+                return audio_text
+        except:
+            pass
 
-# display(selected_language)
+
+def main(selected_language):
+    global keyword_detected
+    # Start a separate thread to constantly listen for the keyword
+    keyword_thread = threading.Thread(target=recognize_keyword)
+    keyword_thread.start()
+    # print("3")
+    # Main loop to keep running until the program is terminated
+    while True:
+        # Check if the keyword has been detected
+        # print("6)")
+        #TODO add random cat sounds function
+        if keyword_detected:
+            # Use your speech recognition library to listen for audio input and convert it to text
+            # TextToSpeech_Watson().generate_audio_watson("MEOW")
+            # TextToSpeech_Watson().play_audio_file(file_path=r"./sounds/cat-meow.wav")
+            TextToSpeech_Watson().play_audio_file(file_path=r"./sounds/alice_cat_meow.wav")
+
+            audio_text = recognizer.recognize_speech()
+            # print("audio was translated to text by google")
+            Cat_Response = generate_cat_response(audio_text)
+            # print("cat response was generated successfully")
+            # print(Cat_Response, "11")
+
+            # Use your text-to-speech library to generate an audio response
+            filename = "output.wav"
+            tts_Watson = TextToSpeech_Watson()
+            tts_Cat_Response = tts_Watson.generate_audio_watson(Cat_Response)
+
+            # Run your necessary functions
+            target_language = selected_language
+            translated_text = ""
+
+
+        # Add a short delay to reduce CPU usage
+        time.sleep(0.1)
+        # print("9")
+
 
 # Call the main function
 if __name__ == '__main__':
     main(selected_language)
+
